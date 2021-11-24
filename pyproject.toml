@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "twitteranalysis"
+version = "0.1.0"
+description = "a project to ananlyze twitter messages"
+authors = ["pengfei <liu.pengfei@hotmail.fr>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pandas = "^1.0.5"
+tweepy = "^4.4.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

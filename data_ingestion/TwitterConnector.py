@@ -11,7 +11,8 @@ class TwitterConnector:
 
     Attributes
     ----------
-    client_api :
+    client_api : Tweepy.api.API
+        A tweet client api that can get tweets.
 
     Methods
     -------
@@ -20,10 +21,13 @@ class TwitterConnector:
 
     get_tweets(search_words, lang, result_type, max_tweet_count):
         get tweets by using given condition
+
+    generate_tweet_df(tweets):
+       Transform raw tweets to a pandas data frame
     """
 
     def __init__(self, consumer_key: str, consumer_secret: str, access_token: str, access_token_secret: str):
-        """Constructs an instance of a tweeter client api
+        """Constructs an instance of tweeter client api
 
          Parameters
          ----------
@@ -109,7 +113,7 @@ class TwitterConnector:
 
         Returns
         -------
-            df : pd.DataFrame
+            df : pandas.DataFrame
                A pandas dataframe that has the required fields of tweets
           """
         # init dataframe

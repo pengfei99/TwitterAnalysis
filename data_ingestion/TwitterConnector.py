@@ -4,11 +4,63 @@ import pandas as pd
 
 
 class TwitterConnector:
+    """
+    A class to represent a twitter client connection.
+
+    ...
+
+    Attributes
+    ----------
+    client_api :
+
+    Methods
+    -------
+    _create_api(consumer_key, consumer_secret, access_token, access_token_secret):
+         Create twitter client api
+
+    get_tweets(search_words, lang, result_type, max_tweet_count):
+        get tweets by using given condition
+    """
+
     def __init__(self, consumer_key: str, consumer_secret: str, access_token: str, access_token_secret: str):
-        self.client_api = self.create_api(consumer_key, consumer_secret, access_token, access_token_secret)
+        """Constructs an instance of a tweeter client api
+
+         Parameters
+         ----------
+             consumer_key : str
+                 consumer_key of your twitter developer account
+             consumer_secret : str
+                 consumer_secret of your twitter developer account
+             access_token : str
+                 access_token of your twitter developer account
+            access_token_secret: str
+                 access_token_secret of twitter developer account
+         """
+        self.client_api = self._create_api(consumer_key, consumer_secret, access_token, access_token_secret)
 
     @staticmethod
-    def create_api(consumer_key: str, consumer_secret: str, access_token: str, access_token_secret: str):
+    def _create_api(consumer_key: str, consumer_secret: str, access_token: str, access_token_secret: str):
+        """ Create twitter client api
+
+        This private function takes a twitter developer account credentials and create an instance of a tweeter
+        client api
+
+        Parameters
+        ----------
+             consumer_key : str
+                 consumer_key of your twitter developer account
+             consumer_secret : str
+                 consumer_secret of your twitter developer account
+             access_token : str
+                 access_token of your twitter developer account
+             access_token_secret: str
+                 access_token_secret of twitter developer account
+
+        Returns
+        -------
+              api : Tweepy.api.API
+                  an instance of a tweeter client api
+          """
         client_auth = tw.OAuthHandler(consumer_key, consumer_secret)
         client_auth.set_access_token(access_token, access_token_secret)
         api = tw.API(client_auth, wait_on_rate_limit=True, retry_count=5, retry_delay=1)
@@ -21,10 +73,45 @@ class TwitterConnector:
         return api
 
     def get_tweets(self, search_words: str, lang: str, result_type: str, max_tweet_count: int):
-        return self.client_api.search_tweets(q=search_words, lang=lang, result_type=result_type, count=max_tweet_count)
+        """ Get tweets that matche the search condition
+
+        This function takes some search conditions and return an array of tweets that match these conditions
+
+        Parameters
+        ----------
+             search_words : str
+                 consumer_key of your twitter developer account
+             lang : str
+                 consumer_secret of your twitter developer account
+             result_type : str
+                 access_token of your twitter developer account
+             max_tweet_count: int
+                 access_token_secret of twitter developer account
+
+        Returns
+        -------
+              tweets : tweepy.models.SearchResults
+                  an array of tweets that matche the search condition
+          """
+        tweets = self.client_api.search_tweets(q=search_words, lang=lang, result_type=result_type, count=max_tweet_count)
+        return tweets
 
     @staticmethod
     def generate_tweet_df(tweets):
+        """ Transform raw tweets to a pandas data frame
+
+        This function takes an array of tweets then transform them into a data frame
+
+        Parameters
+        ----------
+             tweets : tweepy.models.SearchResults
+                 an array of raw tweets
+
+        Returns
+        -------
+            df : pd.DataFrame
+               A pandas dataframe that has the required fields of tweets
+          """
         # init dataframe
         df = pd.DataFrame(columns=['name', 'date', 'text'])
         index = 0

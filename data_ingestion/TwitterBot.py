@@ -58,7 +58,7 @@ def main(argv):
     # create an instance of twitter connector
     tc = TwitterConnector(consumer_key, consumer_secret, access_token, access_token_secret)
     # filter the search result by using below key words
-    search_word, language, result_type, max_tweet_count, bucket, output_path = parse_input_argv(argv)
+    search_word, language, result_type, max_tweet_count, bucket, s3_path = parse_input_argv(argv)
 
     # get the tweets
     tweets = tc.get_tweets(search_word, language, result_type, max_tweet_count)
@@ -75,11 +75,11 @@ def main(argv):
         raise SystemExit(f"Incomplete arguments: S3 credential in env var is incomplete ")
 
     s3_tweet_io = S3TweetDfIO(endpoint, access_key, access_secret, token)
-    print(f"{endpoint}+{access_key}+{access_secret}+{token}")
+    
     # set up write path
     current_date = date.today().strftime("%d-%m-%Y")
-    f_path = f"{output_path}/tweet_{current_date}"
-    s3_tweet_io.write_df_to_s3(df, bucket, output_path)
+    f_path = f"{s3_path}/tweet_{current_date}"
+    s3_tweet_io.write_df_to_s3(df, bucket, f_path)
 
     # set up read example
     df_read = s3_tweet_io.read_parquet_from_s3(bucket, f_path)

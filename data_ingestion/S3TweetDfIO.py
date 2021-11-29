@@ -1,7 +1,6 @@
 import pyarrow.parquet as pq
 import s3fs
 import pyarrow as pa
-from datetime import date
 
 
 class S3TweetDfIO:
@@ -85,26 +84,3 @@ class S3TweetDfIO:
         return dataset.read().to_pandas()
 
 
-def main():
-    # s3 creds config
-    endpoint = "changeMe"
-    access_key = "changeMe"
-    access_secret = "changeMe"
-    token = "changeMe"
-    # create an instance of the tweet io
-    s3_tweet_io = S3TweetDfIO(endpoint, access_key, access_secret, token)
-
-    # set up write path
-    df = None
-    bucket = "pengfei"
-    current_date = date.today().strftime("%d-%m-%Y")
-    output_path = f"diffusion/demo_prod/tweet_{current_date}"
-    s3_tweet_io.write_df_to_s3(df, bucket, output_path)
-
-    # set up read example
-    df_read = s3_tweet_io.read_parquet_from_s3(bucket, output_path)
-    df_read.head()
-
-
-if __name__ == "__main__":
-    main()

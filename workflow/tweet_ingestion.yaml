@@ -28,9 +28,9 @@ spec:
       - name: twitter-bot-param-list
         value: |
           [
-            { "keyword": insee, "language": fr, "result_type": mixed, "max_tweet_count": 10000, "bucket_name": pengfei, "output_path": diffusion/demo_prod },
-             { "keyword": covid, "language": fr, "result_type": mixed, "max_tweet_count": 10000, "bucket_name": pengfei, "output_path": diffusion/demo_prod1 }
-
+            { "keyword": "insee", "language": "fr", "result_type": "mixed", "max_tweet_count": 10000, "bucket_name": "pengfei", "output_path": "diffusion/demo_prod" },
+            { "keyword": "covid", "language": "en", "result_type": "mixed", "max_tweet_count": 10000, "bucket_name": "pengfei", "output_path": "diffusion/demo_prod" }
+             
           ]
   # Create a pvc for the workflow
   volumeClaimTemplates:
@@ -41,7 +41,7 @@ spec:
         resources:
           requests:
             storage: 10Gi
-
+  
   templates:
     #############################################################################################
     #################### main template for planning dag of the pipeline #########################
@@ -62,8 +62,8 @@ spec:
                   value: "{{item.keyword}}"
                 - name: language
                   value: "{{item.language}}"
-                - name: result-type
-                  value: "{{item.result-type}}"
+                - name: result_type
+                  value: "{{item.result_type}}"
                 - name: max_tweet_count
                   value: "{{item.max_tweet_count}}"
                 - name: bucket_name
@@ -91,7 +91,7 @@ spec:
         command: [ sh, -c ]
         args: [ "ls -l /mnt/bin" ]
         volumeMounts:
-          - name: workflow-tmp
+          - name: twitter-bot-workflow-tmp
             mountPath: /mnt
 
     # worker template for task-1 train model
@@ -100,7 +100,7 @@ spec:
         parameters:
           - name: keyword
           - name: language
-          - name: result-type
+          - name: result_type
           - name: max_tweet_count
           - name: bucket_name
           - name: output_path
@@ -108,7 +108,7 @@ spec:
         image: liupengfei99/twitter-bot:main
         command: [ sh, -c ]
         args: [ "python /mnt/bin/data_ingestion/TwitterBot.py -s {{inputs.parameters.keyword}} -l {{inputs.parameters.language}}
-                       -r {{inputs.parameters.result-type}} -m {{inputs.parameters.max_tweet_count}}
+                       -r {{inputs.parameters.result_type}} -m {{inputs.parameters.max_tweet_count}}
                        -b {{inputs.parameters.bucket_name}} --output_path={{inputs.parameters.output_path}}" ]
         resources:
           requests:
@@ -138,5 +138,5 @@ spec:
           - name: TWITTER_ACCESS_TOKEN_SECRET
             value: "{{workflow.parameters.twitter_access_token_secret}}"
         volumeMounts:
-          - name: workflow-tmp
+          - name: twitter-bot-workflow-tmp
             mountPath: /mnt

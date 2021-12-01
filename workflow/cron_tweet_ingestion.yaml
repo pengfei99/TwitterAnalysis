@@ -1,0 +1,150 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  generateName: cron-tweets-ingestion-v1-
+spec:
+  schedule: "* */1 * * *"
+  concurrencyPolicy: "Replace"
+  startingDeadlineSeconds: 120
+  successfulJobsHistoryLimit: 4
+  failedJobsHistoryLimit: 2
+  timezone: "America/Los_Angeles"
+  suspend: false
+  workflowSpec:
+    entrypoint: main
+    arguments:
+      parameters:
+        - name: aws-access-id
+          value: "changeMe"
+        - name: aws-secret-key
+          value: "changeMe"
+        - name: aws-session-token
+          value: "changeMe"
+        - name: aws-default-region
+          value: "us-east-1"
+        - name: aws-s3-endpoint
+          value: "minio.lab.sspcloud.fr"
+         # The twitter account creds
+        - name: twitter_consumer_key
+          value: 'changeMe'
+        - name: twitter_consumer_secret
+          value: 'changeMe'
+        - name: twitter_access_token
+          value: 'changeMe'
+        - name: twitter_access_token_secret
+          value: 'changeMe'
+        - name: twitter-bot-param-list
+          value: |
+            [
+              { "keyword": "insee", "language": "fr", "result_type": "mixed", "max_tweet_count": 10000, "bucket_name": "pengfei", "output_path": "diffusion/demo_prod" },
+              { "keyword": "covid", "language": "en", "result_type": "mixed", "max_tweet_count": 10000, "bucket_name": "pengfei", "output_path": "diffusion/demo_prod" }
+
+            ]
+    # Create a pvc for the workflow
+    volumeClaimTemplates:
+      - metadata:
+          name: twitter-bot-workflow-tmp
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          resources:
+            requests:
+              storage: 10Gi
+  
+    templates:
+      #############################################################################################
+      #################### main template for planning dag of the pipeline #########################
+      #############################################################################################
+      - name: main
+        dag:
+          tasks:
+            # task 0: load code source
+            - name: load-code
+              template: load-code-wt
+            # task 1: run Twitter bot with given params
+            - name: run-twitter-bot
+              dependencies: [ load-code ]
+              template: run-twitter-bot-wt
+              arguments:
+                parameters:
+                  - name: keyword
+                    value: "{{item.keyword}}"
+                  - name: language
+                    value: "{{item.language}}"
+                  - name: result_type
+                    value: "{{item.result_type}}"
+                  - name: max_tweet_count
+                    value: "{{item.max_tweet_count}}"
+                  - name: bucket_name
+                    value: "{{item.bucket_name}}"
+                  - name: output_path
+                    value: "{{item.output_path}}"
+                # pass the inputs to the step "withParam"
+              withParam: "{{workflow.parameters.twitter-bot-param-list}}"
+      ####################################################################################################################
+      #################### task template for implementing the logic of each task of the pipeline #########################
+      ####################################################################################################################
+      # worker template for task-0 load codediffusion/demo_prod
+      - name: load-code-wt
+        inputs:
+          artifacts:
+              # Check out the master branch of the argo repo and place it at /mnt/bin
+              # revision can be anything that git checkout accepts: branch, commit, tag, etc.
+            - name: code
+              path: /mnt/bin
+              git:
+                repo: https://github.com/pengfei99/TwitterAnalysis.git
+                revision: "main"
+        container:
+          image: busybox
+          command: [ sh, -c ]
+          args: [ "ls -l /mnt/bin" ]
+          volumeMounts:
+            - name: twitter-bot-workflow-tmp
+              mountPath: /mnt
+
+      # worker template for task-1 train model
+      - name: run-twitter-bot-wt
+        inputs:
+          parameters:
+            - name: keyword
+            - name: language
+            - name: result_type
+            - name: max_tweet_count
+            - name: bucket_name
+            - name: output_path
+        container:
+          image: liupengfei99/twitter-bot:main
+          command: [ sh, -c ]
+          args: [ "python /mnt/bin/data_ingestion/TwitterBot.py -s {{inputs.parameters.keyword}} -l {{inputs.parameters.language}}
+                         -r {{inputs.parameters.result_type}} -m {{inputs.parameters.max_tweet_count}}
+                         -b {{inputs.parameters.bucket_name}} --output_path={{inputs.parameters.output_path}}" ]
+          resources:
+            requests:
+              memory: "4096Mi"
+              cpu: "4000m"
+            limits:
+              memory: "8192Mi"
+              cpu: "5000m"
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: "{{workflow.parameters.aws-access-id}}"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "{{workflow.parameters.aws-secret-key}}"
+            - name: AWS_DEFAULT_REGION
+              value: "{{workflow.parameters.aws-default-region}}"
+            - name: AWS_S3_ENDPOINT
+              value: "{{workflow.parameters.aws-s3-endpoint}}"
+            - name: AWS_SESSION_TOKEN
+              value: "{{workflow.parameters.aws-session-token}}"
+
+            - name: TWITTER_CONSUMER_KEY
+              value: "{{workflow.parameters.twitter_consumer_key}}"
+            - name: TWITTER_CONSUMER_SECRET
+              value: "{{workflow.parameters.twitter_consumer_secret}}"
+            - name: TWITTER_ACCESS_TOKEN
+              value: "{{workflow.parameters.twitter_access_token}}"
+            - name: TWITTER_ACCESS_TOKEN_SECRET
+              value: "{{workflow.parameters.twitter_access_token_secret}}"
+          volumeMounts:
+            - name: twitter-bot-workflow-tmp
+              mountPath: /mnt

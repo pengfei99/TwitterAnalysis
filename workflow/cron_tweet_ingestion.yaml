@@ -101,7 +101,6 @@ spec:
           volumeMounts:
             - name: twitter-bot-workflow-tmp
               mountPath: /mnt
-
       # worker template for task-1 train model
       - name: run-twitter-bot-wt
         inputs:

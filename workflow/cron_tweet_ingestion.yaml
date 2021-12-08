@@ -36,9 +36,7 @@ spec:
         - name: twitter-bot-param-list
           value: |
             [
-              { "keyword": "insee", "language": "fr", "result_type": "mixed", "max_tweet_count": 10000, "bucket_name": "pengfei", "output_path": "diffusion/demo_prod" },
-              { "keyword": "covid", "language": "en", "result_type": "mixed", "max_tweet_count": 10000, "bucket_name": "pengfei", "output_path": "diffusion/demo_prod" }
-
+              { "keyword": "insee", "language": "fr", "result_type": "mixed", "max_tweet_count": 10000, "bucket_name": "pengfei", "output_path": "diffusion/demo_prod/raw" }
             ]
     # Create a pvc for the workflow
     volumeClaimTemplates:

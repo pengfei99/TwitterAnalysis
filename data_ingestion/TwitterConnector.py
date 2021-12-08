@@ -150,7 +150,7 @@ class TwitterConnector:
         tweet_json=[]
         for tweet in tweets:
             tweet_json.append(tweet._json)
-        pdf_tweets = pd.json_normalize(tweets_json)
+        pdf_tweets = pd.json_normalize(tweet_json)
         return pdf_tweets
 
 

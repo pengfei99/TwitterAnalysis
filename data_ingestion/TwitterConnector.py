@@ -101,10 +101,11 @@ class TwitterConnector:
         return tweets
 
     @staticmethod
-    def generate_tweet_df(tweets):
-        """ Transform raw tweets to a pandas data frame
+    def generate_short_tweet_df(tweets):
+        """ Transform raw tweets into a pandas data frame
 
-        This function takes an array of tweets then transform them into a data frame
+        This function takes an array of tweets then transform them into a data frame. The target dataframe contains
+        only columns: user_name, text, and time_of_creation
 
         Parameters
         ----------
@@ -127,6 +128,30 @@ class TwitterConnector:
                                        'text': tweet_dict.get("text")})
             index = index + 1
         return df
+    
+
+    @staticmethod
+    def generate_full_tweet_df(tweets):
+        """ Transform raw tweets into a pandas data frame
+
+        This function takes an array of tweets then transform them into a data frame
+
+        Parameters
+        ----------
+             tweets : tweepy.models.SearchResults
+                 an array of raw tweets
+
+        Returns
+        -------
+            df : pandas.DataFrame
+               A pandas dataframe that has the required fields of tweets
+          """
+        # transform a list of tweet response status into a list of tweet message in json
+        tweet_json=[]
+        for tweet in tweets:
+            tweet_json.append(tweet._json)
+        pdf_tweets = pd.json_normalize(tweets_json)
+        return pdf_tweets
 
 
 def main():

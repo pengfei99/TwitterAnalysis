@@ -63,7 +63,7 @@ def main(argv):
     # get the tweets
     tweets = tc.get_tweets(search_word, language, result_type, max_tweet_count)
     # generate a pandas df from the tweet
-    df = tc.generate_tweet_df(tweets)
+    df = tc.generate_full_tweet_df(tweets)
 
     # s3 creds config
     endpoint = os.getenv("AWS_S3_ENDPOINT")
